@@ -131,19 +131,52 @@ Some notes about CCDs I've either found out or read about so far:
         - \+ May be used as a reference implementation to test the state machine-based implementation against!
         - \~ Try this first, see if it fits. If it doesn't, use SMs.
 - RS/CP pulse widths are on the same order of time as the reference clock.
-    - RS/CP pulse width: 10~200ns typ.; 20ns reference clock -> 0.5~10 clock cycles.
+    - RS/CP pulse width: 10\~200ns typ.; 20ns reference clock -> 0.5\~10 clock cycles.
+
+
+- List of signals to be driven:
+    - SH (50 pF × 1 ⇒ 50 pF)
+    - ø1 (300 pF (A) × 2 ⇒ 600 pF)
+    - ø2 (300 pF (A) × 2 + 20 pF × 2 (B) ⇒ 640 pF)
+    - RS (20 pF × 2 ⇒ 40 pF)
+    - CP (20 pF × 2 ⇒ 40 pF)
+- Driver layout:
+    - IC 1: TC4428A
+        - Comp A: ø1
+        - True B: ø2 (not ø1)
+    - IC 2: TC4427A
+        - Comp A: SH
+        - Comp B: — (not connected)
+    - IC 3: TC4427A
+        - Comp A: RS
+        - Comp B: CP
 
 ### Driver notes
 
 - I have 3 variants of the driver IC on hand:
-  - TC4426
-    - Both channels **are inverted**
-  - TC4427
-    - Both channels **are true** (non-inverted)
-  - TC4428
-    - Channel A **is inverted**, channel B **is true**
+    - TC4426
+        - Both channels **are inverted**
+    - TC4427
+        - Both channels **are true** (non-inverted)
+        - Annoyingly, I've only got these in SOIC, not DIP.
+    - TC4428
+        - Channel A **is inverted**, channel B **is true**
 
 ![TC442xA package pin-outs](resources/tc442x-pinouts.png)
+
+
+
+### Build schedule
+
+- [ ] Verify that I can actually get the CCD running
+    - [ ] See that the FPGA and the FPGA programmers work.
+        - See [WiProg](https://github.com/kutis96/wiprog)
+    - [ ] Work on the timings code. Testbench it before deploying, dummy.
+    - [ ] Deploy, using capacitors as simulated loads for the drivers. CDon't touch the CCD yet, dummy.
+        - [ ] Make sure that no constraints are violated, use an oscilloscope.
+    - [ ] If all looks okay, hook up the CCD.
+        - [ ] Make sure that no constraints are violated, use an oscilloscope.
+    - [ ] If there's some output from the CCD, you're all good. This part of the project is done.
 
 [datasheet-tcd1706]: https://toshiba.semicon-storage.com/info/docget.jsp?did=60748&prodName=TCD1706DG
 
