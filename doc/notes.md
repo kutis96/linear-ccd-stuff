@@ -27,17 +27,23 @@ range of options for the future projects.
     - I'm only using this because I have a couple boards with these that fit into a breadboard,
       which it keeps the wiring tidier at the cost of pain elsewhere.
 
+### Do
+
+- Be prepared to lose several good working CCDs to ESD, especially when just randomly breadboarding.
+    - Buy more than 2, just in case.
+    - CCDs seem to be exceptionally static-sensitive, behave accordingly.
+
 ## Goals
 
 The goals of this project are as follows:
 
-- [ ] Get a linear CCD running, showing some image data on an oscilloscope
-    - [ ] Create some prototype driver for this linear CCD
+- [x] Get a linear CCD running, showing some image data on an oscilloscope
+    - [x] Create some prototype driver for this linear CCD
         - I wish to use a [TCD1706][datasheet-tcd1706] linear CCD.
             - Reasonably priced on AliExpress
             - Excellent resolution: 7400 elements (4.7µm × 4.7µm squares)
             - Other Toshiba CCDs seem to use very similar drive waveforms
-        - I wish to be able to use my custom FPGA dev board; at least for the timing generation
+        -  I wish to be able to use my custom FPGA dev board; at least for the timing generation
             - I just so happen to have a couple on hand
             - Based on small Lattice [iCE5LP4K][datasheet-ice5lp4k] FPGAs
             - Should™ be good enough for timing generation for early experiments
@@ -47,12 +53,19 @@ The goals of this project are as follows:
                 - Two channels per package
                 - The specs seem to be reasonable
         - Actual goals:
-            - [ ] Timing generation with FPGAs
+            - [x] Timing generation with FPGAs
+                - [x] Stay within timing margins for the CCD
             - [ ] Robust enough electrical design
-                - [ ] Stay within timing margins for the CCD
-                - [ ] Pretend EMI is not a concern, until it is
-                - [ ] Ideally support all 5, 10, and 12V drive levels
+                - [x] Pretend EMI is not a concern, until it is
+                - [x] Ideally support all 5, 10, and 12V drive levels
                 - [ ] Buffer CCD outputs
+                - [ ] Be goddamn sure of ESD safety next time
+                - [ ] Be sure that the drivers can sustain the load well
+                  - Current [TC4426~TC4428][datasheet-tc442x] may only stay within thermal specs driving the main CCD clocks up to about 1.2MHz. 
+                  - To go faster, one has to find:
+                    - [ ] Some way to parallel the drivers
+                    - [ ] Some drivers that are actually cool-able; the TC442x _can_ easily drive 700p loads to 5MHz or so, but it sure gets toasty.
+                    - [ ] Some better drivers altogether meant to drive these loads at these speeds
             - [ ] Figure out what sampling rates/timings should one use based on exposure levels
                 - [ ] Configurable timing generation would be a big plus
 - [ ] Capture image data at as fast a framerate as possible
@@ -129,7 +142,8 @@ Some notes about CCDs I've either found out or read about so far:
         - \- Likely not the best use of FPGA resources
         - \+ Easily testable small units
         - \+ May be used as a reference implementation to test the state machine-based implementation against!
-        - \~ Try this first, see if it fits. If it doesn't, use SMs.
+        - \~ ~~Try this first, see if it fits. If it doesn't, use SMs.~~
+          - Nope, it's stupid. Use a state machine like a semi-normal person.
 - RS/CP pulse widths are on the same order of time as the reference clock.
     - RS/CP pulse width: 10\~200ns typ.; 20ns reference clock -> 0.5\~10 clock cycles.
 
@@ -137,7 +151,7 @@ Some notes about CCDs I've either found out or read about so far:
 - List of signals to be driven:
     - SH (50 pF × 1 ⇒ 50 pF)
     - ø1 (300 pF (A) × 2 ⇒ 600 pF)
-    - ø2 (300 pF (A) × 2 + 20 pF × 2 (B) ⇒ 640 pF)
+    - ø2 (300 pF (A) × 2 + 20 pF × 2 (B) ⇒ 640 pF) (complement of ø1)
     - RS (20 pF × 2 ⇒ 40 pF)
     - CP (20 pF × 2 ⇒ 40 pF)
 - Driver layout:
@@ -164,19 +178,34 @@ Some notes about CCDs I've either found out or read about so far:
 
 ![TC442xA package pin-outs](resources/tc442x-pinouts.png)
 
-
-
 ### Build schedule
 
-- [ ] Verify that I can actually get the CCD running
-    - [ ] See that the FPGA and the FPGA programmers work.
+- [x] Verify that I can actually get the CCD running
+    - [x] See that the FPGA and the FPGA programmers work.
         - See [WiProg](https://github.com/kutis96/wiprog)
-    - [ ] Work on the timings code. Testbench it before deploying, dummy.
-    - [ ] Deploy, using capacitors as simulated loads for the drivers. CDon't touch the CCD yet, dummy.
-        - [ ] Make sure that no constraints are violated, use an oscilloscope.
-    - [ ] If all looks okay, hook up the CCD.
-        - [ ] Make sure that no constraints are violated, use an oscilloscope.
-    - [ ] If there's some output from the CCD, you're all good. This part of the project is done.
+    - [x] Work on the timings code. Testbench it before deploying, dummy.
+    - [x] Deploy, using capacitors as simulated loads for the drivers. CDon't touch the CCD yet, dummy.
+        - [x] Make sure that no constraints are violated, use an oscilloscope.
+    - [x] If all looks okay, hook up the CCD.
+        - [x] Make sure that no constraints are violated, use an oscilloscope.
+    - [x] If there's some output from the CCD, you're all good. This part of the project is done.
+
+This part of the project should™ thus be finished, for now.
+
+However, I've managed to damage the CCD by removing its protective film, and accidentally touching some of its pins.
+
+In the meanwhile, I can:
+
+- [ ] Verify that the [AD80066][datasheet-ad80066] AFEs are working
+  - [ ] Hook up the ADC to the [Artix FPGA board][datasheet-qmtech-artix]
+- [ ] Verify that I can actually capture some CCD-like waveforms with this
+  - [ ] Use the signal generator! It's got arb capabilities.
+    - [ ] Draw up the waveforms as per the o'scope screenshots
+
+And also:
+
+- [ ] Design some PCB for the final CCD driver/sensor assembly
+  - [ ] Toss in _generous_ amounts of ESD protection _everywhere_.
 
 [datasheet-tcd1706]: https://toshiba.semicon-storage.com/info/docget.jsp?did=60748&prodName=TCD1706DG
 
